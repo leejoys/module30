@@ -1,6 +1,11 @@
 package storage
 
-import "github.com/jackc/pgx/v4/pgxpool"
+import (
+	"context"
+	"os"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+)
 
 // type Interface interface{
 // 	NewTask(Task) (int, error),
@@ -8,7 +13,7 @@ import "github.com/jackc/pgx/v4/pgxpool"
 // }
 
 type Storage struct {
-	*pgxpool.Pool
+	db *pgxpool.Pool
 }
 type Task struct {
 	id          int
@@ -28,4 +33,19 @@ func (s *Storage) NewTask(t Task) (int, error) {
 func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
 	var tasks []Task
 	return tasks, nil
+}
+
+func NewStorage() (*Storage, error) {
+	dbpass := os.Getenv("pgpass")
+	db, err := pgxpool.Connect(context.Background(), "postgres"+dbpass+"127.0.0.1:5432")
+
+	if err != nil {
+		return nil, err
+	}
+
+	s := &Storage{
+		db: db,
+	}
+
+	return s, nil
 }
