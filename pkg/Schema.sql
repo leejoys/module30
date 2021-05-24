@@ -17,7 +17,7 @@ closed BIGINT DEFAULT 0,
 author_id INTEGER REFERENCES user(id),
 assigned_id INTEGER REFERENCES user(id),
 title TEXT,
-context TEXT
+content TEXT
 );
 
 CREATE TABLE tasks_labels (

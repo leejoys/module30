@@ -16,12 +16,12 @@ type Storage struct {
 }
 type Task struct {
 	id          int
-	opened      int
-	closed      int
+	opened      int64
+	closed      int64
 	author_id   int
 	assigned_id int
 	title       string
-	context     string
+	content     string
 }
 
 func (s *Storage) NewTask(t Task) (int, error) {
@@ -37,7 +37,8 @@ if err != nil {
 
 func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
 	
-	rows,err:=s.db.Query(`SELECT 
+	rows,err:=s.db.Query(context.Background(),
+	`SELECT 
 	id,
 	opened,
 	closed,
@@ -46,7 +47,7 @@ func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
 	title,
 	context
 	FROM TABLE tasks 
-	WHERE 
+	WHERE ($1=0 OR id=$1) AND ($2=0 OR author_id=$2)
 	ORDER BY id`,id,authorId)
 	
 	if err != nil {
@@ -55,10 +56,21 @@ func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
 
 	var tasks []Task
 for range rows{
-	rows.
+	err:=rows.Next()
+	if err != nil {
+		return nil, err
+	}
+
+	t,err:=
+
+	if err != nil {
+		return nil, err
+	}
+
+
 }
 
-	return tasks, nil
+	return tasks, rows.Err()
 }
 
 func New(connstr string) (*Storage, error) {
