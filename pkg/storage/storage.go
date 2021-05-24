@@ -6,14 +6,12 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-// type Interface interface{
-// 	NewTask(Task) (int, error),
-// 	Tasks(int, int) ([]Tasks, error)
-// }
-
+// Хранилище данных.
 type Storage struct {
 	db *pgxpool.Pool
 }
+
+// Задача.
 type Task struct {
 	Id         int
 	Opened     int64
@@ -24,6 +22,23 @@ type Task struct {
 	Content    string
 }
 
+// Конструктор, принимает строку подключения к БД.
+func New(connstr string) (*Storage, error) {
+
+	db, err := pgxpool.Connect(context.Background(), connstr)
+
+	if err != nil {
+		return nil, err
+	}
+
+	s := &Storage{
+		db: db,
+	}
+
+	return s, nil
+}
+
+// NewTask создаёт новую задачу и возвращает её id.
 func (s *Storage) NewTask(t Task) (int, error) {
 	var id int
 	err := s.db.QueryRow(context.Background(),
@@ -37,6 +52,7 @@ func (s *Storage) NewTask(t Task) (int, error) {
 	return id, nil
 }
 
+// Tasks возвращает список задач из БД.
 func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
 
 	rows, err := s.db.Query(context.Background(),
@@ -76,19 +92,4 @@ func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
 	}
 
 	return tasks, rows.Err()
-}
-
-func New(connstr string) (*Storage, error) {
-
-	db, err := pgxpool.Connect(context.Background(), connstr)
-
-	if err != nil {
-		return nil, err
-	}
-
-	s := &Storage{
-		db: db,
-	}
-
-	return s, nil
 }
