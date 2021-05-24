@@ -21,9 +21,11 @@ type Task struct {
 }
 
 func (s *Storage) NewTask(t Task) (int, error) {
-
+	var id int
+	return id, nil
 }
 
 func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
-
+	var tasks []Task
+	return tasks, nil
 }
