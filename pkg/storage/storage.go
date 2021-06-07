@@ -46,7 +46,7 @@ func New(connstr string) (*Storage, error) {
 	return s, nil
 }
 
-// [ ]NewTask создаёт новую задачу и возвращает её id.
+//NewTask создаёт новую задачу и возвращает её id.
 func (s *Storage) NewTask(t Task) (int, error) {
 	var id int
 	err := s.db.QueryRow(context.Background(),
@@ -60,7 +60,7 @@ func (s *Storage) NewTask(t Task) (int, error) {
 	return id, nil
 }
 
-// [ ]Tasks возвращает список задач из БД.
+//Tasks возвращает список задач из БД.
 func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
 
 	rows, err := s.db.Query(context.Background(),
@@ -102,7 +102,7 @@ func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
 	return tasks, rows.Err()
 }
 
-//[ ]Получения информации о конкретной задаче по ее номеру,
+//Task - Получения информации о конкретной задаче по ее номеру,
 func (s *Storage) Task(id int) (Task, error) {
 	var t Task
 	err := s.db.QueryRow(context.Background(),
@@ -132,16 +132,16 @@ func (s *Storage) Task(id int) (Task, error) {
 	return t, nil
 }
 
-//[ ]Обновление задачи,
+//Update - Обновление полей title и content задачи id,
 func (s *Storage) Update(t Task) error {
 	_, err := s.db.Exec(context.Background(), `
 	UPDATE tasks
-	SET title=$2, content=$3
-	WHERE id=$1;`, t.Id, t.Title, t.Content)
+	SET title=$2, content=$3, assigned_id=$4
+	WHERE id=$1;`, t.Id, t.Title, t.Content, t.AssignedId)
 	return err
 }
 
-//[ ]Удаление задачи,
+//Delete - Удаление задачи по id
 func (s *Storage) Delete(id int) error {
 	_, err := s.db.Exec(context.Background(), `
 	DELETE FROM tasks 
@@ -149,22 +149,26 @@ func (s *Storage) Delete(id int) error {
 	return err
 }
 
-//[ ]Создание массива задач.
-func (s *Storage) NewTasks(tasks []Task) error {
+//NewTasks - Создание массива задач. Возвращает слайс
+//с id задач соответственно их порядку на входе.
+func (s *Storage) NewTasks(tasks []Task) ([]int, error) {
 	tx, err := s.db.Begin(context.Background())
 	if err != nil {
-		return err
+		return nil, err
 	}
+	var ids []int
 	for _, t := range tasks {
-		_, err = tx.Exec(context.Background(), `
+		var id int
+		err = tx.QueryRow(context.Background(), `
 	INSERT INTO	
 	tasks(title, content)
-	VALUES ($1,$2);`, t.Title, t.Content)
+	VALUES ($1,$2);`, t.Title, t.Content).Scan(&id)
 		if err != nil {
 			tx.Rollback(context.Background())
-			return err
+			return nil, err
 		}
+		ids = append(ids, id)
 	}
 	tx.Commit(context.Background())
-	return nil
+	return ids, nil
 }
