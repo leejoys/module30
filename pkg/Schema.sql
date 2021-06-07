@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS tasks_labels, tasks, labels, users;
+DROP TABLE IF EXISTS tasks_labels, tasks, users, labels;
 
 CREATE TABLE users (
 id SERIAL PRIMARY KEY,
@@ -14,8 +14,8 @@ CREATE TABLE tasks (
 id SERIAL PRIMARY KEY,
 opened BIGINT NOT NULL,
 closed BIGINT DEFAULT 0,
-author_id INTEGER REFERENCES user(id),
-assigned_id INTEGER REFERENCES user(id),
+author_id INTEGER REFERENCES users(id),
+assigned_id INTEGER REFERENCES users(id),
 title TEXT,
 content TEXT
 );
