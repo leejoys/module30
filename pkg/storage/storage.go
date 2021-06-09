@@ -1,15 +1,16 @@
 package storage
 
-//[ ]ТЗ:
-//[ ]Получение списка задач,
-//[ ]Получения информации о конкретной задаче по ее номеру,
-//[ ]Создание задачи,
-//[ ]Обновление задачи,
-//[ ]Удаление задачи,
-//[ ]Создание массива задач.
+//[+]ТЗ:
+//[+]Получение списка задач,
+//[+]Получения информации о конкретной задаче по ее номеру,
+//[+]Создание задачи,
+//[+]Обновление задачи,
+//[+]Удаление задачи,
+//[+]Создание массива задач.
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 )
@@ -50,8 +51,8 @@ func New(connstr string) (*Storage, error) {
 func (s *Storage) NewTask(t Task) (int, error) {
 	var id int
 	err := s.db.QueryRow(context.Background(),
-		`INSERT INTO tasks(title,content) 
-		VALUES $1,$2 RETURNING id;`, t.Title, t.Content).Scan(&id)
+		`INSERT INTO tasks(title, content, opened) 
+		VALUES $1,$2,$3 RETURNING id;`, t.Title, t.Content, time.Now().Unix()).Scan(&id)
 
 	if err != nil {
 		return 0, err
@@ -161,8 +162,8 @@ func (s *Storage) NewTasks(tasks []Task) ([]int, error) {
 		var id int
 		err = tx.QueryRow(context.Background(), `
 	INSERT INTO	
-	tasks(title, content)
-	VALUES ($1,$2);`, t.Title, t.Content).Scan(&id)
+	tasks(title, content, opened)
+	VALUES $1,$2,$3;`, t.Title, t.Content, time.Now().Unix()).Scan(&id)
 		if err != nil {
 			tx.Rollback(context.Background())
 			return nil, err
