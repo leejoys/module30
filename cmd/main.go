@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"module30/pkg/storage"
 	"os"
-	"storage"
 	"strconv"
 )
 
