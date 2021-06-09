@@ -52,7 +52,7 @@ func (s *Storage) NewTask(t Task) (int, error) {
 	var id int
 	err := s.db.QueryRow(context.Background(),
 		`INSERT INTO tasks(title, content, opened) 
-		VALUES $1,$2,$3 RETURNING id;`, t.Title, t.Content, time.Now().Unix()).Scan(&id)
+		VALUES ($1,$2,$3) RETURNING id;`, t.Title, t.Content, time.Now().Unix()).Scan(&id)
 
 	if err != nil {
 		return 0, err
@@ -66,13 +66,13 @@ func (s *Storage) Tasks(id, authorId int) ([]Task, error) {
 
 	rows, err := s.db.Query(context.Background(),
 		`SELECT 
-		id,
-		opened,
-		closed,
-		author_id,
-		assigned_id,
-		title,
-		content
+		tasks.id,
+		tasks.opened,
+		tasks.closed,
+		tasks.author_id,
+		tasks.assigned_id,
+		tasks.title,
+		tasks.content
 		FROM tasks 
 		WHERE ($1=0 OR id=$1) AND ($2=0 OR author_id=$2)
 		ORDER BY id;`, id, authorId)
@@ -108,13 +108,13 @@ func (s *Storage) Task(id int) (Task, error) {
 	var t Task
 	err := s.db.QueryRow(context.Background(),
 		`SELECT 
-		id,
-		opened,
-		closed,
-		author_id,
-		assigned_id,
-		title,
-		content
+		tasks.id,
+		tasks.opened,
+		tasks.closed,
+		tasks.author_id,
+		tasks.assigned_id,
+		tasks.title,
+		tasks.content
 		FROM tasks 
 		WHERE id=$1;`,
 		id).Scan(
@@ -163,7 +163,7 @@ func (s *Storage) NewTasks(tasks []Task) ([]int, error) {
 		err = tx.QueryRow(context.Background(), `
 	INSERT INTO	
 	tasks(title, content, opened)
-	VALUES $1,$2,$3;`, t.Title, t.Content, time.Now().Unix()).Scan(&id)
+	VALUES ($1,$2,$3) RETURNING id;`, t.Title, t.Content, time.Now().Unix()).Scan(&id)
 		if err != nil {
 			tx.Rollback(context.Background())
 			return nil, err
